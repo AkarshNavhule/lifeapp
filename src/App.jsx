@@ -14,7 +14,7 @@ const App = () => {
     setCurrentDate(new Date(utc + istOffset));
   }, []);
 
-  // 2. Auto-Generate 1220x2712 Image
+  // 2. Auto-Generate Image
   useEffect(() => {
     if (currentDate && captureRef.current && !imgUrl) {
       setTimeout(() => {
@@ -26,9 +26,21 @@ const App = () => {
         })
         .then((dataUrl) => setImgUrl(dataUrl))
         .catch((err) => console.error(err));
-      }, 500);
+      }, 500); // 500ms delay to ensure fonts are loaded
     }
   }, [currentDate, imgUrl]);
+
+  // 3. AUTO-DOWNLOAD (New Feature for Macro Apps)
+  useEffect(() => {
+    if (imgUrl) {
+      const link = document.createElement('a');
+      link.download = `wallpaper-${new Date().getTime()}.png`; // Unique filename
+      link.href = imgUrl;
+      document.body.appendChild(link);
+      link.click(); // Triggers the download automatically
+      document.body.removeChild(link);
+    }
+  }, [imgUrl]);
 
   // --- CALENDAR DATA ---
   const getMonthData = (year, month) => {
@@ -65,13 +77,8 @@ const App = () => {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      
-      // CHANGE 1: Use flex-start to align from the top
       justifyContent: 'flex-start', 
-      
-      // CHANGE 2: Increase this value to move everything further down
-      paddingTop: '800px', 
-      
+      paddingTop: '800px', // Keeps your custom vertical offset
       fontFamily: 'sans-serif',
       boxSizing: 'border-box',
     },
@@ -95,7 +102,7 @@ const App = () => {
   return (
     <div style={{ backgroundColor: '#161616', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: 0 }}>
       
-      {/* HIDDEN SOURCE ELEMENT */}
+      {/* HIDDEN SOURCE ELEMENT (Used for generation) */}
       <div style={{ position: 'fixed', top: -10000, left: -10000 }}>
         <div ref={captureRef} style={styles.captureContainer}>
           <div style={styles.wrapper}>
@@ -128,8 +135,8 @@ const App = () => {
         </div>
       </div>
 
-      {/* FINAL OUTPUT IMAGE */}
-      {imgUrl && (
+      {/* FINAL OUTPUT: Shows image and text if download fails */}
+      {imgUrl ? (
         <img 
           src={imgUrl} 
           alt="Calendar" 
@@ -139,6 +146,9 @@ const App = () => {
             display: 'block' 
           }} 
         />
+      ) : (
+        // Optional: Keep screen black while generating
+        <div style={{width: '100vw', height: '100vh', background: '#161616'}} />
       )}
     </div>
   );
