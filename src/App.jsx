@@ -17,7 +17,6 @@ const App = () => {
   // 2. Auto-Generate 1220x2712 Image
   useEffect(() => {
     if (currentDate && captureRef.current && !imgUrl) {
-      // Slight delay to ensure DOM is ready
       setTimeout(() => {
         toPng(captureRef.current, {
           width: 1220,
@@ -44,7 +43,7 @@ const App = () => {
     return days;
   };
 
-  if (!currentDate) return null; // Render nothing while initializing
+  if (!currentDate) return null;
 
   const currentYear = currentDate.getFullYear();
   const currentMonthIndex = currentDate.getMonth();
@@ -58,7 +57,7 @@ const App = () => {
 
   // --- STYLES ---
   const styles = {
-    // Hidden Capture Container (1220x2712)
+    // Hidden Capture Container
     captureContainer: {
       width: '1220px',
       height: '2712px',
@@ -66,10 +65,15 @@ const App = () => {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
+      
+      // CHANGE 1: Use flex-start to align from the top
+      justifyContent: 'flex-start', 
+      
+      // CHANGE 2: Increase this value to move everything further down
+      paddingTop: '800px', 
+      
       fontFamily: 'sans-serif',
       boxSizing: 'border-box',
-      padding: '60px', 
     },
     wrapper: { width: '100%', maxWidth: '1000px' },
     grid: {
