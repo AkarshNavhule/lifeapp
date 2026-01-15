@@ -5,8 +5,19 @@ const App = () => {
   const captureRef = useRef(null);
   const [imgUrl, setImgUrl] = useState(null);
   const [currentDate, setCurrentDate] = useState(null);
+  
+  // 1. Parse URL Parameters (HTTP GET Request Style)
+  // Default values match the user's original hardcoded values (iPhone resolution)
+  const params = new URLSearchParams(window.location.search);
+  const width = parseInt(params.get('width')) || 1220;
+  const height = parseInt(params.get('height')) || 2712;
+  const themeColor = params.get('color') ? `#${params.get('color')}` : '#ff5722';
+  
+  // Dynamically calculate padding to maintain the "Lock Screen" ratio 
+  // (Original was 800px padding for 2712px height ~ 29.5%)
+  const paddingTop = Math.round(height * 0.295);
 
-  // 1. Get IST Time
+  // 2. Get IST Time
   useEffect(() => {
     const now = new Date();
     const utc = now.getTime() + now.getTimezoneOffset() * 60000;
@@ -14,23 +25,22 @@ const App = () => {
     setCurrentDate(new Date(utc + istOffset));
   }, []);
 
-  // 2. Auto-Generate Image
+  // 3. Auto-Generate Image
   useEffect(() => {
     if (currentDate && captureRef.current && !imgUrl) {
+      // Delay to ensure fonts and layout are stable
       setTimeout(() => {
         toPng(captureRef.current, {
-          width: 1220,
-          height: 2712,
+          width: width,
+          height: height,
           pixelRatio: 1,
           style: { transform: 'none' }
         })
         .then((dataUrl) => setImgUrl(dataUrl))
         .catch((err) => console.error(err));
-      }, 500); // 500ms delay to ensure fonts are loaded
+      }, 500); 
     }
-  }, [currentDate, imgUrl]);
-
-
+  }, [currentDate, imgUrl, width, height]);
 
   // --- CALENDAR DATA ---
   const getMonthData = (year, month) => {
@@ -59,34 +69,40 @@ const App = () => {
 
   // --- STYLES ---
   const styles = {
-    // Hidden Capture Container
+    // Dynamic Container Sizing
     captureContainer: {
-      width: '1220px',
-      height: '2712px',
+      width: `${width}px`,
+      height: `${height}px`,
       backgroundColor: '#161616',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'flex-start', 
-      paddingTop: '800px', // Keeps your custom vertical offset
+      paddingTop: `${paddingTop}px`, // Dynamic padding
       fontFamily: 'sans-serif',
       boxSizing: 'border-box',
     },
-    wrapper: { width: '100%', maxWidth: '1000px' },
+    // Scale wrapper based on width relative to original 1220px to prevent layout break
+    wrapper: { 
+      width: '100%', 
+      maxWidth: '85%', // Use percentage for better flexibility
+      transform: width < 1000 ? `scale(${width / 1220})` : 'none',
+      transformOrigin: 'top center'
+    },
     grid: {
       display: 'grid',
       gridTemplateColumns: 'repeat(3, 1fr)',
-      columnGap: '60px',
-      rowGap: '70px',
+      columnGap: `${width * 0.05}px`, // Relative gap
+      rowGap: `${height * 0.025}px`, // Relative gap
     },
-    monthBox: { display: 'flex', flexDirection: 'column', gap: '20px' },
+    monthBox: { display: 'flex', flexDirection: 'column', gap: '15px' },
     monthTitle: { color: '#888', fontSize: '32px', margin: 0, fontWeight: '500' },
-    daysGrid: { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '14px' },
+    daysGrid: { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '12px' },
     dot: { width: '20px', height: '20px', borderRadius: '50%' },
     dotFuture: { backgroundColor: '#333' },
     dotPast: { backgroundColor: '#e0e0e0' },
-    dotCurrent: { backgroundColor: '#ff5722', boxShadow: '0 0 15px #ff5722' },
-    footer: { marginTop: '150px', textAlign: 'center', fontSize: '48px', color: '#666', fontWeight: '500' }
+    dotCurrent: { backgroundColor: themeColor, boxShadow: `0 0 15px ${themeColor}` },
+    footer: { marginTop: '100px', textAlign: 'center', fontSize: '48px', color: '#666', fontWeight: '500' }
   };
 
   return (
@@ -119,7 +135,7 @@ const App = () => {
               })}
             </div>
             <div style={styles.footer}>
-              <span style={{color: '#ff5722'}}>{daysLeft}d left</span> · {percentageLeft}%
+              <span style={{color: themeColor}}>{daysLeft}d left</span> · {percentageLeft}%
             </div>
           </div>
         </div>
@@ -133,12 +149,15 @@ const App = () => {
           style={{ 
             maxWidth: '100%', 
             maxHeight: '100vh', 
-            display: 'block' 
+            display: 'block',
+            boxShadow: '0 0 50px rgba(0,0,0,0.5)' // Added shadow for presentation
           }} 
         />
       ) : (
-        // Optional: Keep screen black while generating
-        <div style={{width: '100vw', height: '100vh', background: '#161616'}} />
+        // Loading state matching the background
+        <div style={{width: '100vw', height: '100vh', background: '#161616', display:'flex', justifyContent:'center', alignItems:'center', color:'#333'}}>
+           Generating...
+        </div>
       )}
     </div>
   );
