@@ -30,17 +30,7 @@ const App = () => {
     }
   }, [currentDate, imgUrl]);
 
-  // 3. AUTO-DOWNLOAD (New Feature for Macro Apps)
-  useEffect(() => {
-    if (imgUrl) {
-      const link = document.createElement('a');
-      link.download = `wallpaper-${new Date().getTime()}.png`; // Unique filename
-      link.href = imgUrl;
-      document.body.appendChild(link);
-      link.click(); // Triggers the download automatically
-      document.body.removeChild(link);
-    }
-  }, [imgUrl]);
+
 
   // --- CALENDAR DATA ---
   const getMonthData = (year, month) => {
